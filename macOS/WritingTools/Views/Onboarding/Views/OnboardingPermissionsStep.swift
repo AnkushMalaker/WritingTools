@@ -120,7 +120,7 @@ struct OnboardingPermissionsStep: View {
         Button("Open Privacy & Security") {
           if let url = URL(
             string:
-              "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension"
+              "x-apple.systempreferences:com.apple.preference.security?Privacy"
           ) {
             NSWorkspace.shared.open(url)
           }
@@ -146,7 +146,7 @@ struct OnboardingPermissionsHelper {
       try? await Task.sleep(for: .milliseconds(200))
       if let url = URL(
         string:
-          "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"
+          "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
       ) {
         NSWorkspace.shared.open(url)
       }

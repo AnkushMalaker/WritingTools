@@ -13,7 +13,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var clipboardRestoreObserver: NSObjectProtocol?
     private var commandsChangedObserver: NSObjectProtocol?
     private var commandShortcutNamesById: [UUID: KeyboardShortcuts.Name] = [:]
-    
+    private let doubleTapMonitor = DoubleTapMonitor()
+    private var doubleTapPreferenceObserver: NSObjectProtocol?
+
     let appState = AppState.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -39,6 +41,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.showPopup()
             } else {
                 logger.info("Hotkeys are paused")
+            }
+        }
+
+        // Register the double-tap modifier activator (e.g. ⌥⌥)
+        configureDoubleTap()
+        doubleTapPreferenceObserver = NotificationCenter.default.addObserver(
+            forName: .doubleTapPreferenceDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.configureDoubleTap()
             }
         }
 
@@ -102,6 +116,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
 
+    private func configureDoubleTap() {
+        doubleTapMonitor.modifierKeyCode = AppSettings.shared.doubleTapModifierKeyCode
+        doubleTapMonitor.onDoubleTap = { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if !AppSettings.shared.hotkeysPaused {
+                    self.showPopup()
+                } else {
+                    logger.info("Hotkeys are paused")
+                }
+            }
+        }
+        if AppSettings.shared.doubleTapEnabled {
+            doubleTapMonitor.start()
+        } else {
+            doubleTapMonitor.stop()
+        }
+    }
+
     private func setupCommandShortcuts() {
         let commandsWithShortcuts = appState.commandManager.commands.filter(\.hasShortcut)
         let desiredIds = Set(commandsWithShortcuts.map(\.id))
@@ -156,6 +189,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Stop the double-tap monitor
+        doubleTapMonitor.stop()
+        if let doubleTapPreferenceObserver {
+            NotificationCenter.default.removeObserver(doubleTapPreferenceObserver)
+        }
+
         // Flush any debounced keychain writes before exit
         AppSettings.shared.flushPendingKeychainWrites()
 

@@ -92,7 +92,21 @@ final class AppSettings {
     var hotkeysPaused: Bool {
         didSet { defaults.set(hotkeysPaused, forKey: "hotkeys_paused") }
     }
-    
+
+    // MARK: - Double-tap modifier (e.g. ⌥⌥) to activate Writing Tools
+    var doubleTapEnabled: Bool {
+        didSet {
+            defaults.set(doubleTapEnabled, forKey: "double_tap_enabled")
+            NotificationCenter.default.post(name: .doubleTapPreferenceDidChange, object: nil)
+        }
+    }
+    var doubleTapModifierKeyCode: Int {
+        didSet {
+            defaults.set(doubleTapModifierKeyCode, forKey: "double_tap_modifier_keycode")
+            NotificationCenter.default.post(name: .doubleTapPreferenceDidChange, object: nil)
+        }
+    }
+
     var mistralApiKey: String = "" {
         didSet {
             guard !isBootstrapping, oldValue != mistralApiKey else { return }
@@ -219,6 +233,11 @@ final class AppSettings {
         self.hotKeyCode = defaults.integer(forKey: "hotKey_keyCode")
         self.hotKeyModifiers = defaults.integer(forKey: "hotKey_modifiers")
         self.hotkeysPaused = defaults.bool(forKey: "hotkeys_paused")
+
+        // Double-tap: off by default; default modifier is Left Option (keyCode 58).
+        self.doubleTapEnabled = defaults.bool(forKey: "double_tap_enabled")
+        let storedDoubleTapKeyCode = defaults.integer(forKey: "double_tap_modifier_keycode")
+        self.doubleTapModifierKeyCode = storedDoubleTapKeyCode == 0 ? 58 : storedDoubleTapKeyCode
         
         let ollamaImageModeRaw = defaults.string(forKey: "ollama_image_mode") ?? OllamaImageMode.ocr.rawValue
         self.ollamaImageMode = OllamaImageMode(rawValue: ollamaImageModeRaw) ?? .ocr

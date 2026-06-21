@@ -66,6 +66,31 @@ struct GeneralSettingsPane<SaveButton: View>: View {
                         .help("Choose a convenient key combination to bring up Writing Tools from anywhere.")
                     }
                     .padding(.vertical, 2)
+
+                    Divider()
+
+                    Toggle("Activate with a double-tap of a modifier key", isOn: $settings.doubleTapEnabled)
+                        .help("Quickly tap a single modifier key twice (e.g. ⌥⌥) to open Writing Tools.")
+
+                    if settings.doubleTapEnabled {
+                        HStack(alignment: .center, spacing: 12) {
+                            Text("Double-tap key:")
+                                .frame(width: 180, alignment: .leading)
+                                .foregroundStyle(.primary)
+                            Picker("", selection: $settings.doubleTapModifierKeyCode) {
+                                ForEach(DoubleTapMonitor.selectableModifiers, id: \.keyCode) { modifier in
+                                    Text(modifier.name).tag(modifier.keyCode)
+                                }
+                            }
+                            .labelsHidden()
+                            .frame(maxWidth: 220, alignment: .leading)
+                        }
+                        .padding(.vertical, 2)
+
+                        Text("Tip: if you use this modifier a lot on its own, pick one you rarely tap twice quickly. Requires Accessibility / Input Monitoring permission.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
