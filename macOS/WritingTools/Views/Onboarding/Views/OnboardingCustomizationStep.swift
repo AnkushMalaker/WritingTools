@@ -30,6 +30,34 @@ struct OnboardingCustomizationStep: View {
         .padding(.vertical, 4)
       }
 
+      GroupBox("Double-Tap Activation") {
+        VStack(alignment: .leading, spacing: 8) {
+          Toggle(
+            "Activate with a double-tap of a modifier key",
+            isOn: $settings.doubleTapEnabled
+          )
+          .help("Quickly tap a single modifier key twice (e.g. ⌥⌥) to open Writing Tools.")
+
+          if settings.doubleTapEnabled {
+            HStack(alignment: .center, spacing: 12) {
+              Text("Double-tap key:")
+              Picker("", selection: $settings.doubleTapModifierKeyCode) {
+                ForEach(DoubleTapMonitor.selectableModifiers, id: \.keyCode) { modifier in
+                  Text(modifier.name).tag(modifier.keyCode)
+                }
+              }
+              .labelsHidden()
+              .frame(maxWidth: 220, alignment: .leading)
+            }
+
+            Text("Tip: pick a modifier you rarely tap twice on its own. Requires Accessibility permission.")
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+          }
+        }
+        .padding(.vertical, 4)
+      }
+
       GroupBox("Appearance Theme") {
         VStack(alignment: .leading, spacing: 8) {
           Text("Choose how the popup window looks.")
