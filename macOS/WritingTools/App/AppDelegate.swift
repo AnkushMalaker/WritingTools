@@ -281,7 +281,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
 
             window.positionNearMouse()
-            NSApp.activate()
+            // `NSApp.activate()` (the macOS 14 cooperative API) does not reliably
+            // pull keyboard focus to a background `.accessory` app, so keystrokes
+            // keep going to the previously-focused app. Force activation so the
+            // borderless popup actually becomes key and can accept text input.
+            NSApp.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
             window.orderFrontRegardless()
         }

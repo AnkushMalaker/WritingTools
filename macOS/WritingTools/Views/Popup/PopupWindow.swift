@@ -194,6 +194,17 @@ class PopupWindow: NSWindow {
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { true }
 
+  override func becomeKey() {
+    super.becomeKey()
+    // Defer to the next runloop tick so the SwiftUI hierarchy is mounted
+    // and observing `focusToken` before we bump it. This drives the text
+    // field focus reliably on every invocation (the `onAppear` attempt
+    // races window activation and often no-ops).
+    DispatchQueue.main.async { [weak self] in
+      self?.viewModel.focusToken &+= 1
+    }
+  }
+
   // Mouse Event Handling
   override func mouseDown(with event: NSEvent) {
     initialLocation = event.locationInWindow

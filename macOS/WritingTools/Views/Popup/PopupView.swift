@@ -8,6 +8,11 @@ private let logger = AppLogger.logger("PopupView")
 @Observable
 final class PopupViewModel {
   var isEditMode: Bool = false
+  /// Bumped by the window each time it becomes key, so the view can
+  /// (re)assert focus on the text field once the window can actually
+  /// accept first responder. Avoids the activation race where focusing
+  /// in `onAppear` no-ops because the window isn't key yet.
+  var focusToken: Int = 0
 }
 
 struct PopupView: View {
@@ -93,7 +98,7 @@ struct PopupView: View {
       if !viewModel.isEditMode {
         HStack(spacing: 8) {
           TextField(
-            "Describe your change...",
+            "prompt..",
             text: $customText
           )
           .textFieldStyle(.plain)
@@ -108,11 +113,18 @@ struct PopupView: View {
         }
         .padding(.horizontal)
         .onAppear {
-          // Auto-focus the text field when popup appears for better keyboard accessibility
+          // Auto-focus when the popup appears (covers the case where the
+          // window is already key by the time the view mounts).
           Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(100))
             isTextFieldFocused = true
           }
+        }
+        // Re-assert focus whenever the window becomes key. This is the
+        // reliable path: it fires after makeKeyAndOrderFront, so the
+        // programmatic focus actually lands on the text field.
+        .onChange(of: viewModel.focusToken) { _, _ in
+          isTextFieldFocused = true
         }
       }
 

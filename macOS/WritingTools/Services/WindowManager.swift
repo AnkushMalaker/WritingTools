@@ -48,7 +48,10 @@ class WindowManager: NSObject, NSWindowDelegate {
     /// Dock, so `NSApp.activate()` alone may not suffice. `orderFrontRegardless()`
     /// ensures the window appears above other apps even if activation is delayed.
     func bringWindowToFront(_ window: NSWindow) {
-        NSApp.activate()
+        // Force activation: the cooperative `NSApp.activate()` does not reliably
+        // take keyboard focus for a background `.accessory` app, so without this
+        // the window appears but typing still goes to the previous app.
+        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
     }
