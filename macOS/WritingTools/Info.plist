@@ -24,5 +24,17 @@
         <string>WritingTools needs access to control your computer to simulate copy and paste actions, allowing it to retrieve selected text and insert AI-generated results.</string>
         <key>NSScreenCaptureUsageDescription</key>
         <string>WritingTools uses screen capture to read text from images on your screen via OCR.</string>
+        <!-- Allow plain-HTTP connections to user-configured AI endpoints
+             (e.g. a llama.cpp / Ollama server at http://host:port, including
+             Tailscale IPs like 100.x.y.z). App Transport Security otherwise
+             blocks any non-HTTPS request.
+             NOTE: do NOT also add NSAllowsLocalNetworking here — on modern
+             macOS its presence makes NSAllowsArbitraryLoads be IGNORED, which
+             re-blocks non-local HTTP hosts (e.g. Tailscale IPs). -->
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <true />
+        </dict>
     </dict>
 </plist>
